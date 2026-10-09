@@ -77,7 +77,7 @@ class AccountNumberParserTest {
     @ParameterizedTest(name = "reads {1}")
     @MethodSource("userStoryOneCases")
     void readsASingleEntry(String entry, String expected) {
-        assertEquals(List.of(expected), AccountNumberParser.parse(entry));
+        assertEquals(List.of(expected), accountNumbersIn(entry));
     }
 
     @Test
@@ -93,12 +93,12 @@ class AccountNumberParserTest {
 
             """;
 
-        assertEquals(List.of("000000000", "123456789"), AccountNumberParser.parse(file));
+        assertEquals(List.of("000000000", "123456789"), accountNumbersIn(file));
     }
 
     @Test
     void readsAnEmptyFileAsNoEntries() {
-        assertEquals(List.of(), AccountNumberParser.parse(""));
+        assertEquals(List.of(), accountNumbersIn(""));
     }
 
     @Test
@@ -133,7 +133,7 @@ class AccountNumberParserTest {
     @ParameterizedTest(name = "reads {1}")
     @MethodSource("userStoryThreeCases")
     void readsUnrecognizedDigitsAsQuestionMarks(String entry, String expected) {
-        assertEquals(List.of(expected), AccountNumberParser.parse(entry));
+        assertEquals(List.of(expected), accountNumbersIn(entry));
     }
 
     @Test
@@ -157,5 +157,11 @@ class AccountNumberParserTest {
             """;
 
         assertThrows(IllegalArgumentException.class, () -> AccountNumberParser.parse(tooWide));
+    }
+
+    private static List<String> accountNumbersIn(String scannedFile) {
+        return AccountNumberParser.parse(scannedFile).stream()
+            .map(ScannedEntry::accountNumber)
+            .toList();
     }
 }

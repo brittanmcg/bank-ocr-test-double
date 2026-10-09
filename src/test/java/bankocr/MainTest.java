@@ -50,7 +50,7 @@ class MainTest {
         assertEquals("""
             000000051
             49006771? ILL
-            777777777 ERR
+            777777177
             """, Files.readString(output));
     }
 

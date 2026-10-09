@@ -9,7 +9,8 @@ import java.util.stream.Collectors;
 
 /**
  * Reads one scanned file and writes a results file with one account number
- * per line, flagged {@code ERR} or {@code ILL} when it can't be trusted.
+ * per line, corrected where possible and flagged {@code AMB} or {@code ILL}
+ * when it can't be trusted.
  */
 public final class Main {
 
@@ -49,7 +50,7 @@ public final class Main {
         int entries;
         try {
             var results = AccountNumberParser.parse(scannedFile).stream()
-                .map(ScanResult::classify)
+                .map(ScanResult::of)
                 .toList();
             entries = results.size();
             report = results.stream()

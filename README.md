@@ -11,7 +11,7 @@ turns them into account numbers, as described in the
 | 1          | Parse scanned entries into account numbers  | Done   |
 | 2          | Validate account numbers with a checksum    | Done   |
 | 3          | Write a results file with `ERR` / `ILL`     | Done   |
-| 4          | Correct single-segment scanner errors       | Not started |
+| 4          | Correct single-segment scanner errors       | Done   |
 
 ## Requirements
 
@@ -30,23 +30,35 @@ turns them into account numbers, as described in the
 
 ```sh
 ./gradlew installDist
-build/install/bank-ocr/bin/bank-ocr samples/user-story-3.txt results.txt
+build/install/bank-ocr/bin/bank-ocr samples/user-story-4.txt results.txt
 ```
 
 This reads one scanned file and writes one results file, with one account
 number per line:
 
 ```
-000000051
-49006771? ILL
-1234?678? ILL
-123456789
-888888888 ERR
+711111111
+777777177
+200800000
+...
+888888888 AMB ['888886888', '888888880', '888888988']
+...
+490867715
 ```
 
-- No status: the number was read cleanly and its checksum is valid.
-- `ERR`: every digit was read, but the checksum is invalid.
-- `ILL`: at least one digit was illegible; each one is shown as `?`.
+When an entry is illegible or fails its checksum, the program tries every way
+of adding or removing a single pipe or underscore. If exactly one of those
+gives a legible number with a valid checksum, that number is reported as the
+result. Otherwise the entry is flagged:
+
+- No status: the number is valid, either as scanned or after correction.
+- `AMB`: more than one single-segment correction gives a valid number. The
+  number as scanned is shown, followed by every valid alternative.
+- `ILL`: no single-segment correction gives a valid number. Illegible digits
+  are shown as `?`.
+
+`ERR` (legible, but the checksum is invalid) is part of the format but no
+longer appears in practice; see [Open questions](#open-questions).
 
 An existing results file is overwritten. If the scanned file is malformed, the
 program reports the problem and writes nothing, so a partial results file is
@@ -74,6 +86,19 @@ stripped by editors and file transfers. A digit that doesn't match any known
 pattern is reported as `?`. Structurally malformed entries (too few lines,
 lines wider than 27 characters, a non-blank separator line) are rejected with
 an error that names the line number.
+
+## Open questions
+
+### Should an uncorrectable `ERR` be reported as `ERR` or `ILL`?
+
+User Story 4 says that if an entry can't be corrected, "the status should be
+reported ILL". This implementation does that, so an entry that was fully
+legible but has a bad checksum (for example `222222222`) is reported as `ILL`,
+and `ERR` never appears in the output.
+
+That conflicts with User Story 3, where `ILL` means "illegible". Reporting
+`222222222 ERR` instead would tell the reader the digits were read clearly. It
+is a one-line change in `ScanResult.of` once the bank confirms which it wants.
 
 ## Known limitations
 

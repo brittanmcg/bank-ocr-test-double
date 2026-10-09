@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Turns the scanner's output into account numbers.
+ * Splits the scanner's output into entries, one per account number.
  *
  * <p>Each entry is four lines: three rows of glyphs, 27 characters wide
  * (nine digits of three columns each), followed by a blank separator line.
@@ -13,23 +13,22 @@ final class AccountNumberParser {
 
     static final int DIGITS_PER_ENTRY = 9;
     static final int LINE_WIDTH = DIGITS_PER_ENTRY * Glyphs.WIDTH;
-    static final char ILLEGIBLE = '?';
     private static final int LINES_PER_ENTRY = Glyphs.HEIGHT + 1;
 
     private AccountNumberParser() {
     }
 
-    static List<String> parse(String scannedFile) {
+    static List<ScannedEntry> parse(String scannedFile) {
         var lines = scannedFile.lines().toList();
-        var accountNumbers = new ArrayList<String>();
+        var entries = new ArrayList<ScannedEntry>();
         for (int start = 0; start < lines.size(); start += LINES_PER_ENTRY) {
             int end = Math.min(start + LINES_PER_ENTRY, lines.size());
-            accountNumbers.add(parseEntry(lines.subList(start, end), start + 1));
+            entries.add(parseEntry(lines.subList(start, end), start + 1));
         }
-        return accountNumbers;
+        return entries;
     }
 
-    private static String parseEntry(List<String> entryLines, int firstLineNumber) {
+    private static ScannedEntry parseEntry(List<String> entryLines, int firstLineNumber) {
         // The trailing separator line is optional on the last entry.
         if (entryLines.size() < Glyphs.HEIGHT) {
             throw new IllegalArgumentException(
@@ -46,11 +45,11 @@ final class AccountNumberParser {
             rows.add(padToLineWidth(entryLines.get(i), firstLineNumber + i));
         }
 
-        var digits = new StringBuilder(DIGITS_PER_ENTRY);
+        var glyphs = new ArrayList<String>(DIGITS_PER_ENTRY);
         for (int position = 0; position < DIGITS_PER_ENTRY; position++) {
-            digits.append(Glyphs.digitFor(glyphAt(rows, position)).orElse(ILLEGIBLE));
+            glyphs.add(glyphAt(rows, position));
         }
-        return digits.toString();
+        return new ScannedEntry(glyphs);
     }
 
     // Trailing spaces are often stripped by editors and file transfers, so a
