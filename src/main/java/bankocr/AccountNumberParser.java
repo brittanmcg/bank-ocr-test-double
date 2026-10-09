@@ -13,6 +13,7 @@ final class AccountNumberParser {
 
     static final int DIGITS_PER_ENTRY = 9;
     static final int LINE_WIDTH = DIGITS_PER_ENTRY * Glyphs.WIDTH;
+    static final char ILLEGIBLE = '?';
     private static final int LINES_PER_ENTRY = Glyphs.HEIGHT + 1;
 
     private AccountNumberParser() {
@@ -47,10 +48,7 @@ final class AccountNumberParser {
 
         var digits = new StringBuilder(DIGITS_PER_ENTRY);
         for (int position = 0; position < DIGITS_PER_ENTRY; position++) {
-            var glyph = glyphAt(rows, position);
-            int digitPosition = position + 1;
-            digits.append(Glyphs.digitFor(glyph).orElseThrow(() -> new IllegalArgumentException(
-                "Unrecognized digit " + digitPosition + " in entry starting at line " + firstLineNumber)));
+            digits.append(Glyphs.digitFor(glyphAt(rows, position)).orElse(ILLEGIBLE));
         }
         return digits.toString();
     }

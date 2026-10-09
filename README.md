@@ -10,7 +10,7 @@ turns them into account numbers, as described in the
 |------------|---------------------------------------------|--------|
 | 1          | Parse scanned entries into account numbers  | Done   |
 | 2          | Validate account numbers with a checksum    | Done   |
-| 3          | Write a results file with `ERR` / `ILL`     | Not started |
+| 3          | Write a results file with `ERR` / `ILL`     | Done   |
 | 4          | Correct single-segment scanner errors       | Not started |
 
 ## Requirements
@@ -25,6 +25,35 @@ turns them into account numbers, as described in the
 ./gradlew test     # run the tests only
 ./gradlew test --tests 'bankocr.ChecksumTest'   # run one test class
 ```
+
+## Running
+
+```sh
+./gradlew installDist
+build/install/bank-ocr/bin/bank-ocr samples/user-story-3.txt results.txt
+```
+
+This reads one scanned file and writes one results file, with one account
+number per line:
+
+```
+000000051
+49006771? ILL
+1234?678? ILL
+123456789
+888888888 ERR
+```
+
+- No status: the number was read cleanly and its checksum is valid.
+- `ERR`: every digit was read, but the checksum is invalid.
+- `ILL`: at least one digit was illegible; each one is shown as `?`.
+
+An existing results file is overwritten. If the scanned file is malformed, the
+program reports the problem and writes nothing, so a partial results file is
+never left behind.
+
+Exit codes: `0` success, `1` the file couldn't be read, written, or parsed,
+`2` wrong arguments.
 
 ## Input format
 
@@ -41,9 +70,10 @@ per line), and the fourth line is blank:
 
 The example above reads as `123456789`. Lines shorter than 27 characters are
 treated as if padded with trailing spaces, because trailing whitespace is often
-stripped by editors and file transfers. Malformed entries (too few lines, lines
-wider than 27 characters, a non-blank separator line) are rejected with an
-error that names the line number.
+stripped by editors and file transfers. A digit that doesn't match any known
+pattern is reported as `?`. Structurally malformed entries (too few lines,
+lines wider than 27 characters, a non-blank separator line) are rejected with
+an error that names the line number.
 
 ## Known limitations
 

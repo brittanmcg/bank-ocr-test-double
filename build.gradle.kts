@@ -1,5 +1,5 @@
 plugins {
-    java
+    application
 }
 
 repositories {
@@ -15,6 +15,11 @@ dependencies {
 // Target the current LTS release so the build runs on any JDK 25+.
 tasks.withType<JavaCompile>().configureEach {
     options.release = 25
+}
+
+application {
+    mainClass = "bankocr.Main"
+    applicationName = "bank-ocr"
 }
 
 tasks.test {

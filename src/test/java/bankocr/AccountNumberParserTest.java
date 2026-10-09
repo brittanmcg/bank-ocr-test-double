@@ -111,15 +111,41 @@ class AccountNumberParserTest {
         assertThrows(IllegalArgumentException.class, () -> AccountNumberParser.parse(truncated));
     }
 
+    static List<Arguments> userStoryThreeCases() {
+        return List.of(
+            Arguments.of("""
+                 _  _  _  _  _  _  _  _
+                | || || || || || || ||_   |
+                |_||_||_||_||_||_||_| _|  |
+                """, "000000051"),
+            Arguments.of("""
+                    _  _  _  _  _  _     _
+                |_||_|| || ||_   |  |  | _
+                  | _||_||_||_|  |  |  | _|
+                """, "49006771?"),
+            Arguments.of("""
+                    _  _     _  _  _  _  _
+                  | _| _||_| _ |_   ||_||_|
+                  ||_  _|  | _||_|  ||_| _
+                """, "1234?678?"));
+    }
+
+    @ParameterizedTest(name = "reads {1}")
+    @MethodSource("userStoryThreeCases")
+    void readsUnrecognizedDigitsAsQuestionMarks(String entry, String expected) {
+        assertEquals(List.of(expected), AccountNumberParser.parse(entry));
+    }
+
     @Test
-    void rejectsAnUnrecognizedDigit() {
-        var garbled = """
+    void rejectsANonBlankSeparatorLine() {
+        var misaligned = """
              _  _  _  _  _  _  _  _  _
-            | || || || || || || || ||_|
-            |_||_||_||_||_||_||_||_|| |
+            | || || || || || || || || |
+            |_||_||_||_||_||_||_||_||_|
+             _  _  _  _  _  _  _  _  _
             """;
 
-        assertThrows(IllegalArgumentException.class, () -> AccountNumberParser.parse(garbled));
+        assertThrows(IllegalArgumentException.class, () -> AccountNumberParser.parse(misaligned));
     }
 
     @Test
